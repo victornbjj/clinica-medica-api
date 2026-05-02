@@ -1,0 +1,103 @@
+
+
+# ─── Compiled output ────────────────────────────────────────
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+
+# ─── Maven ──────────────────────────────────────────────────
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Preserve source files inside target (multi-module safety)
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# ─── Spring Boot ────────────────────────────────────────────
+# Local environment overrides (never commit secrets/credentials)
+**/src/main/resources/application-local.properties
+**/src/main/resources/application-local.yml
+**/src/main/resources/application-dev.properties
+**/src/main/resources/application-dev.yml
+**/src/main/resources/application-prod.properties
+**/src/main/resources/application-prod.yml
+
+# ─── Logs ───────────────────────────────────────────────────
+logs/
+*.log
+*.log.*
+spring.log
+
+# ─── IntelliJ IDEA ──────────────────────────────────────────
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+.idea_modules/
+
+# ─── Eclipse / STS ──────────────────────────────────────────
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache
+bin/
+
+# ─── VS Code ────────────────────────────────────────────────
+.vscode/
+*.code-workspace
+
+# ─── NetBeans ───────────────────────────────────────────────
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# ─── OS generated ───────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ─── Environment & secrets ──────────────────────────────────
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.jks
+secrets/
+
+# ─── Docker (if used locally) ───────────────────────────────
+docker-compose.override.yml
+
+# ─── Test & coverage reports ────────────────────────────────
+/test-output/
+/surefire-reports/
+jacoco.exec
+coverage/
+
+# ─── Temporary / misc ───────────────────────────────────────
+*.tmp
+*.bak
+*.swp
+*~
+HELP.md
