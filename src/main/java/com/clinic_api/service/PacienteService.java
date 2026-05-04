@@ -11,9 +11,9 @@ public interface PacienteService {
 
     Paciente findById(UUID id);
 
-    void save(Paciente medico);
+    void save(Paciente paciente);
 
-    void update(Paciente medico);
+    void update(Paciente paciente);
 
     void delete(UUID id);
 }

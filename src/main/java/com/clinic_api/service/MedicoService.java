@@ -11,6 +11,8 @@ public interface MedicoService {
 
     Medico findById(UUID id);
 
+
+
     void save(Medico medico);
 
     void update(Medico medico);
