@@ -20,7 +20,7 @@ public class JwtUtil {
     @Value("${jwt.expiration}")
     private long expirationTime;
 
-    // Gerar token com Role
+
     public String generateToken(String email, Role role) {
         return Jwts.builder()
             .setSubject(email)
@@ -31,7 +31,7 @@ public class JwtUtil {
             .compact();
     }
 
-    // Extrair Role do token (SEGURO - vem do JWT)
+
     public Role extractRole(String token) {
         Claims claims = Jwts.parserBuilder()
             .setSigningKey(getSigningKey())
@@ -42,7 +42,7 @@ public class JwtUtil {
         return Role.valueOf(claims.get("role", String.class));
     }
 
-    // Extrair Email do token
+
     public String extractEmail(String token) {
         Claims claims = Jwts.parserBuilder()
             .setSigningKey(getSigningKey())

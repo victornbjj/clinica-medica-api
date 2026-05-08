@@ -70,6 +70,8 @@ public class PacienteServiceImpl implements PacienteService {
     @Override
     public Paciente findById(UUID id) {
         Role role = getCurrentUserRole();
+
+
         if(role == Role.ADMIN|| role == Role.MEDICO){
             return pacienteRepository.findById(id)
                     .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));

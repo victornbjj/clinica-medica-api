@@ -70,6 +70,11 @@ public class MedicoServiceImpl implements MedicoService {
     @Override
     public Medico findById(UUID id) {
         Role role = getCurrentUserRole();
+
+        Medico existe = medicoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Médico não encontrado"));
+
+
         if (role == Role.ADMIN ){
             return medicoRepository.findById(id)
                     .orElseThrow(()-> new ResourceNotFoundException("Médico não encontrado"));

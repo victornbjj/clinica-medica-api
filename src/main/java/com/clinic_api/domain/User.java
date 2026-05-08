@@ -34,4 +34,6 @@ public class User {
 
     @ManyToOne
     private Endereco endereco;
+
+
 }
