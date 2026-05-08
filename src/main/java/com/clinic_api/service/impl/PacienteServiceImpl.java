@@ -57,7 +57,7 @@ public class PacienteServiceImpl implements PacienteService {
             return pacienteRepository.findAll();
         }
         else if(role == Role.CLIENTE){
-            Paciente paciente = pacienteRepository.findByIdUser(getCurrentUser().getId())
+            Paciente paciente = pacienteRepository.findByIdUserId(getCurrentUser().getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
 
             return List.of(paciente);
@@ -77,7 +77,7 @@ public class PacienteServiceImpl implements PacienteService {
                     .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
         }
         if (role == Role.CLIENTE) {
-            Paciente paciente = pacienteRepository.findByIdUser(getCurrentUser().getId())
+            Paciente paciente = pacienteRepository.findByIdUserId(getCurrentUser().getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
             if(!paciente.getId().equals(id)){
                 throw new AccessDeniedException("Acesso negado");
@@ -97,7 +97,7 @@ public class PacienteServiceImpl implements PacienteService {
             throw new AccessDeniedException("Acesso negado");
         }
 
-        boolean jaExiste = pacienteRepository.findByIdUser(paciente.getIdUser().getId()).isPresent();
+        boolean jaExiste = pacienteRepository.findByIdUserId(paciente.getIdUser().getId()).isPresent();
         if (jaExiste) {
             throw new BusinessException("Esse usuário já possui um paciente cadastrado");
         }
@@ -117,7 +117,7 @@ public class PacienteServiceImpl implements PacienteService {
 
 
         if(role == Role.CLIENTE){
-            Paciente pacienteLogado = pacienteRepository.findByIdUser(getCurrentUser().getId())
+            Paciente pacienteLogado = pacienteRepository.findByIdUserId(getCurrentUser().getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
 
             if (!pacienteLogado.getId().equals(existe.getId())){

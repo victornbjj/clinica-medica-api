@@ -8,7 +8,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface MedicoRepository extends JpaRepository<Medico,UUID> {
-    Optional<Medico> findByIdUser(UUID idUser);
+    Optional<Medico> findByIdUserId(UUID idUser);
 
     Optional<Medico> findByCrm(String crm);
 }

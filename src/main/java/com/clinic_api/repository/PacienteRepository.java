@@ -8,5 +8,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface PacienteRepository extends JpaRepository<Paciente,UUID> {
-    Optional<Paciente> findByIdUser(UUID idUser);
+    Optional<Paciente> findByIdUserId(UUID idUser);
 }
+

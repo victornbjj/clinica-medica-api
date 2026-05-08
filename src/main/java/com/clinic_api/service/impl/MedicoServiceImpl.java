@@ -57,7 +57,7 @@ public class MedicoServiceImpl implements MedicoService {
             return medicoRepository.findAll();
         } else if (role == Role.MEDICO) {
             // MEDICO vê apenas a si mesmo
-            Medico medico = medicoRepository.findByIdUser(getCurrentUser().getId())
+            Medico medico = medicoRepository.findByIdUserId(getCurrentUser().getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Médico não encontrado para o usuário"));
             return List.of(medico);
         } else {
@@ -80,7 +80,7 @@ public class MedicoServiceImpl implements MedicoService {
                     .orElseThrow(()-> new ResourceNotFoundException("Médico não encontrado"));
         }
         else if(role ==Role.MEDICO ) {
-            Medico medico = medicoRepository.findByIdUser(getCurrentUser().getId())
+            Medico medico = medicoRepository.findByIdUserId(getCurrentUser().getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Médico não encontrado para o usuário"));
             if (!medico.getId().equals(id)) {
                 throw new AccessDeniedException("Médico só pode acessar seus próprios dados");
@@ -107,7 +107,7 @@ public class MedicoServiceImpl implements MedicoService {
         }
 
 
-        boolean userJaVinculado = medicoRepository.findByIdUser(medico.getIdUser().getId()).isPresent();
+        boolean userJaVinculado = medicoRepository.findByIdUserId(medico.getIdUser().getId()).isPresent();
         if (userJaVinculado) {
             throw new BusinessException("Esse usuário já possui um médico cadastrado");
         }
@@ -138,7 +138,7 @@ public class MedicoServiceImpl implements MedicoService {
         }
 
         if(role == Role.MEDICO){
-            Medico medicoLogado = medicoRepository.findByIdUser(getCurrentUser().getId())
+            Medico medicoLogado = medicoRepository.findByIdUserId(getCurrentUser().getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Médico não encontrado para o usuário"));
 
             if(!medicoLogado.getId().equals(existe.getId())){

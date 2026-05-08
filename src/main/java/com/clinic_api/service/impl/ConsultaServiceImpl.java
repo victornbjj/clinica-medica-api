@@ -75,7 +75,7 @@ public class ConsultaServiceImpl implements ConsultaService {
         }
 
         else if (role == Role.MEDICO) {
-            Medico medico = medicoRepository.findByIdUser(getCurrentUser().getId())
+            Medico medico = medicoRepository.findByIdUserId(getCurrentUser().getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Médico não encontrado"));
 
             if (!medico.getId().equals(idMedico)) {
@@ -99,7 +99,7 @@ public class ConsultaServiceImpl implements ConsultaService {
         }
 
         if (role == Role.CLIENTE){
-            Paciente paciente = pacienteRepository.findByIdUser(getCurrentUser().getId())
+            Paciente paciente = pacienteRepository.findByIdUserId(getCurrentUser().getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
 
             if(!paciente.getId().equals(idPaciente)){
@@ -118,12 +118,12 @@ public class ConsultaServiceImpl implements ConsultaService {
             case ADMIN -> consultaRepository.findAll();
 
             case MEDICO -> {
-                Medico medico = medicoRepository.findByIdUser(getCurrentUser().getId())
+                Medico medico = medicoRepository.findByIdUserId(getCurrentUser().getId())
                         .orElseThrow(() -> new ResourceNotFoundException("Médico não encontrado"));
                 yield  consultaRepository.findAllByMedicoId(medico.getId());
             }
             case CLIENTE -> {
-                Paciente paciente = pacienteRepository.findByIdUser(getCurrentUser().getId())
+                Paciente paciente = pacienteRepository.findByIdUserId(getCurrentUser().getId())
                         .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
                 yield consultaRepository.findAllByPacienteId(paciente.getId());
             }
@@ -140,7 +140,7 @@ public class ConsultaServiceImpl implements ConsultaService {
             return consulta;
         }
         if(role == Role.MEDICO){
-            Medico medico = medicoRepository.findByIdUser(getCurrentUser().getId())
+            Medico medico = medicoRepository.findByIdUserId(getCurrentUser().getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Medico não encontrado"));
             if(!consulta.getMedico().getId().equals(medico.getId())){
                 throw new AccessDeniedException(("Acesso negado"));
@@ -148,7 +148,7 @@ public class ConsultaServiceImpl implements ConsultaService {
             return consulta;
         }
         if(role == Role.CLIENTE){
-            Paciente paciente = pacienteRepository.findByIdUser(getCurrentUser().getId())
+            Paciente paciente = pacienteRepository.findByIdUserId(getCurrentUser().getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
             if(!consulta.getPaciente().getId().equals(paciente.getId())){
                 throw new AccessDeniedException(("Acesso negado, voce só pode ver suas proprias consultas"));
@@ -165,7 +165,7 @@ public class ConsultaServiceImpl implements ConsultaService {
         Role role = getCurrentUserRole();
 
         if(role == Role.CLIENTE){
-            Paciente paciente = pacienteRepository.findByIdUser(getCurrentUser().getId())
+            Paciente paciente = pacienteRepository.findByIdUserId(getCurrentUser().getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
 
             if(!consulta.getPaciente().getId().equals(paciente.getId())){
@@ -174,7 +174,7 @@ public class ConsultaServiceImpl implements ConsultaService {
         }
 
         if(role == Role.MEDICO){
-            Medico medico = medicoRepository.findByIdUser(getCurrentUser().getId())
+            Medico medico = medicoRepository.findByIdUserId(getCurrentUser().getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Medico não encontrado"));
 
             if(!consulta.getMedico().getId().equals(medico.getId())){
@@ -204,7 +204,7 @@ public class ConsultaServiceImpl implements ConsultaService {
                 .orElseThrow(()-> new ResourceNotFoundException("Consulta não existente"));
 
         if(role == Role.CLIENTE){
-            Paciente paciente = pacienteRepository.findByIdUser(getCurrentUser().getId())
+            Paciente paciente = pacienteRepository.findByIdUserId(getCurrentUser().getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
 
             if(!existing.getPaciente().getId().equals(paciente.getId())){
@@ -213,7 +213,7 @@ public class ConsultaServiceImpl implements ConsultaService {
         }
 
         if(role == Role.MEDICO){
-            Medico medico = medicoRepository.findByIdUser(getCurrentUser().getId())
+            Medico medico = medicoRepository.findByIdUserId(getCurrentUser().getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Medico não encontrado"));
 
             if(!existing.getMedico().getId().equals(medico.getId())){
@@ -250,7 +250,7 @@ public class ConsultaServiceImpl implements ConsultaService {
                 .orElseThrow(()-> new ResourceNotFoundException("Consulta não existente"));
 
         if(role == Role.CLIENTE){
-            Paciente paciente = pacienteRepository.findByIdUser(getCurrentUser().getId())
+            Paciente paciente = pacienteRepository.findByIdUserId(getCurrentUser().getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
 
             if(!existing.getPaciente().getId().equals(paciente.getId())){
@@ -259,7 +259,7 @@ public class ConsultaServiceImpl implements ConsultaService {
         }
 
         if(role == Role.MEDICO){
-            Medico medico = medicoRepository.findByIdUser(getCurrentUser().getId())
+            Medico medico = medicoRepository.findByIdUserId(getCurrentUser().getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Medico não encontrado"));
 
             if(!existing.getMedico().getId().equals(medico.getId())){
