@@ -17,7 +17,9 @@ import com.clinic_api.dto.RegisterRequest;
 import com.clinic_api.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 
+@Service
 public class AuthServiceImpl  implements AuthService {
     @Autowired
     private UserRepository userRepository;
