@@ -1,17 +1,20 @@
 package com.clinic_api.dto;
 
+
 import com.clinic_api.enums.Role;
-import com.clinic_api.service.ViaCepService;
 import lombok.Data;
-import org.springframework.beans.factory.annotation.Autowired;
+
 
 @Data
-public class RegisterRequest {
-
+public class AdminRegisterRequest {
     private String email;
     private String password;
     private String nome;
     private String cep;
     private String numero;
+    private Role role;
+    private String crm;
+    private String especialidade;
+
 
 }
