@@ -1,21 +1,20 @@
 package com.clinic_api.service;
 
 import com.clinic_api.domain.Consulta;
+import com.clinic_api.dto.consulta.ConsultaResponse;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 public interface ConsultaService {
 
-    List<Consulta> findAllByMedico(UUID idMedico);
+    List<ConsultaResponse> findAllByMedico(UUID idMedico);
 
-    List<Consulta> findAllByPaciente(UUID idPaciente);
+    List<ConsultaResponse> findAllByPaciente(UUID idPaciente);
 
-    List<Consulta> findAll();
+    List<ConsultaResponse> findAll();
 
-    Consulta findById(UUID id);
+    ConsultaResponse findById(UUID id);
 
     void save(Consulta consulta);
 

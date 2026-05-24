@@ -2,6 +2,7 @@ package com.clinic_api.service.impl;
 
 import com.clinic_api.domain.Medico;
 import com.clinic_api.domain.User;
+import com.clinic_api.dto.medico.MedicoResponse;
 import com.clinic_api.enums.Role;
 import com.clinic_api.exception.AccessDeniedException;
 import com.clinic_api.exception.BusinessException;
@@ -49,47 +50,66 @@ public class MedicoServiceImpl implements MedicoService {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
     }
 
-    @Override
-    public List<Medico> findAll() {
+    private List<Medico> findVisibleMedicos() {
         Role role = getCurrentUserRole();
         if (role == Role.ADMIN || role == Role.CLIENTE) {
-            // ADMIN e CLIENTE veem todos
             return medicoRepository.findAll();
-        } else if (role == Role.MEDICO) {
-            // MEDICO vê apenas a si mesmo
+        }
+        if (role == Role.MEDICO) {
             Medico medico = medicoRepository.findByIdUserId(getCurrentUser().getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Médico não encontrado para o usuário"));
             return List.of(medico);
-        } else {
-            throw new AccessDeniedException("Acesso negado");
         }
-
+        throw new AccessDeniedException("Acesso negado");
     }
 
+    private MedicoResponse toPublicResponse(Medico medico) {
+        return new MedicoResponse(
+                medico.getId(),
+                medico.getNome(),
+                medico.getEspecialidade(),
+                null,
+                null
+        );
+    }
+
+    private MedicoResponse toAdminResponse(Medico medico) {
+        return new MedicoResponse(
+                medico.getId(),
+                medico.getNome(),
+                medico.getEspecialidade(),
+                medico.getCrm(),
+                medico.getIdUser().getEmail()
+        );
+    }
 
     @Override
-    public Medico findById(UUID id) {
+    public List<MedicoResponse> findAll() {
         Role role = getCurrentUserRole();
+        return findVisibleMedicos().stream()
+                .map(role == Role.ADMIN ? this::toAdminResponse : this::toPublicResponse)
+                .toList();
+    }
 
-        Medico existe = medicoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Médico não encontrado"));
-
-
-        if (role == Role.ADMIN ){
-            return medicoRepository.findById(id)
-                    .orElseThrow(()-> new ResourceNotFoundException("Médico não encontrado"));
+    @Override
+    public MedicoResponse findById(UUID id) {
+        Role role = getCurrentUserRole();
+        if (role == Role.ADMIN) {
+            Medico medico = medicoRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("Médico não encontrado"));
+            return toAdminResponse(medico);
         }
-        else if(role ==Role.MEDICO ) {
+        if (role == Role.MEDICO) {
             Medico medico = medicoRepository.findByIdUserId(getCurrentUser().getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Médico não encontrado para o usuário"));
             if (!medico.getId().equals(id)) {
                 throw new AccessDeniedException("Médico só pode acessar seus próprios dados");
             }
-            return medico;
-        } else{
-            throw new AccessDeniedException("Acesso negado");
+            return toAdminResponse(medico);
         }
+        throw new AccessDeniedException("Acesso negado");
     }
+
 
     @Override
     public void save(Medico medico) {

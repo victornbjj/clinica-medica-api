@@ -1,5 +1,6 @@
 package com.clinic_api.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -46,6 +47,7 @@ public class Endereco {
     private String complemento;
 
     @OneToMany(mappedBy = "endereco")
+    @JsonIgnore
     private List<User> users;
 }
 

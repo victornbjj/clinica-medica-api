@@ -13,6 +13,7 @@ import com.clinic_api.repository.ConsultaRepository;
 import com.clinic_api.repository.MedicoRepository;
 import com.clinic_api.repository.PacienteRepository;
 import com.clinic_api.repository.UserRepository;
+import com.clinic_api.dto.consulta.ConsultaResponse;
 import com.clinic_api.service.ConsultaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -63,64 +64,63 @@ public class ConsultaServiceImpl implements ConsultaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
     }
 
-
-
+    private List<ConsultaResponse> toResponseList(List<Consulta> consultas) {
+        return consultas.stream().map(ConsultaResponse::from).toList();
+    }
 
     @Override
-    public List<Consulta> findAllByMedico(UUID idMedico) {
+    public List<ConsultaResponse> findAllByMedico(UUID idMedico) {
         Role role = getCurrentUserRole();
 
         if (role == Role.ADMIN) {
-            return consultaRepository.findAllByMedicoId(idMedico);
+            return toResponseList(consultaRepository.findAllByMedicoId(idMedico));
         }
 
-        else if (role == Role.MEDICO) {
+        if (role == Role.MEDICO) {
             Medico medico = medicoRepository.findByIdUserId(getCurrentUser().getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Médico não encontrado"));
 
             if (!medico.getId().equals(idMedico)) {
                 throw new AccessDeniedException("Acesso negado");
             }
-            return consultaRepository.findAllByMedicoId(idMedico);
+            return toResponseList(consultaRepository.findAllByMedicoId(idMedico));
         }
         throw new AccessDeniedException("Acesso negado");
     }
 
     @Override
-    public List<Consulta> findAllByPaciente(UUID idPaciente) {
+    public List<ConsultaResponse> findAllByPaciente(UUID idPaciente) {
         Role role = getCurrentUserRole();
 
         if (role == Role.ADMIN) {
-            return consultaRepository.findAllByPacienteId(idPaciente);
-
+            return toResponseList(consultaRepository.findAllByPacienteId(idPaciente));
         }
         if (role == Role.MEDICO) {
-            return consultaRepository.findAllByPacienteId(idPaciente);
+            return toResponseList(consultaRepository.findAllByMedicoId(idPaciente));
         }
 
-        if (role == Role.CLIENTE){
+        if (role == Role.CLIENTE) {
             Paciente paciente = pacienteRepository.findByIdUserId(getCurrentUser().getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
 
-            if(!paciente.getId().equals(idPaciente)){
-                throw new AccessDeniedException(("Acesso negado"));
+            if (!paciente.getId().equals(idPaciente)) {
+                throw new AccessDeniedException("Acesso negado");
             }
-            return consultaRepository.findAllByPacienteId(idPaciente);
+            return toResponseList(consultaRepository.findAllByPacienteId(idPaciente));
         }
 
-        throw new AccessDeniedException(("Acesso negado"));
+        throw new AccessDeniedException("Acesso negado");
     }
 
     @Override
-    public List<Consulta> findAll() {
+    public List<ConsultaResponse> findAll() {
         Role role = getCurrentUserRole();
-        return switch (role) {
+        List<Consulta> consultas = switch (role) {
             case ADMIN -> consultaRepository.findAll();
-
             case MEDICO -> {
                 Medico medico = medicoRepository.findByIdUserId(getCurrentUser().getId())
                         .orElseThrow(() -> new ResourceNotFoundException("Médico não encontrado"));
-                yield  consultaRepository.findAllByMedicoId(medico.getId());
+                yield consultaRepository.findAllByMedicoId(medico.getId());
             }
             case CLIENTE -> {
                 Paciente paciente = pacienteRepository.findByIdUserId(getCurrentUser().getId())
@@ -128,36 +128,36 @@ public class ConsultaServiceImpl implements ConsultaService {
                 yield consultaRepository.findAllByPacienteId(paciente.getId());
             }
         };
+        return toResponseList(consultas);
     }
 
     @Override
-    public Consulta findById(UUID id) {
+    public ConsultaResponse findById(UUID id) {
         Role role = getCurrentUserRole();
         Consulta consulta = consultaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Consulta não encontrada"));
 
-        if(role == Role.ADMIN){
-            return consulta;
+        if (role == Role.ADMIN) {
+            return ConsultaResponse.from(consulta);
         }
-        if(role == Role.MEDICO){
+        if (role == Role.MEDICO) {
             Medico medico = medicoRepository.findByIdUserId(getCurrentUser().getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Medico não encontrado"));
-            if(!consulta.getMedico().getId().equals(medico.getId())){
-                throw new AccessDeniedException(("Acesso negado"));
+            if (!consulta.getMedico().getId().equals(medico.getId())) {
+                throw new AccessDeniedException("Acesso negado");
             }
-            return consulta;
+            return ConsultaResponse.from(consulta);
         }
-        if(role == Role.CLIENTE){
+        if (role == Role.CLIENTE) {
             Paciente paciente = pacienteRepository.findByIdUserId(getCurrentUser().getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
-            if(!consulta.getPaciente().getId().equals(paciente.getId())){
-                throw new AccessDeniedException(("Acesso negado, voce só pode ver suas proprias consultas"));
+            if (!consulta.getPaciente().getId().equals(paciente.getId())) {
+                throw new AccessDeniedException("Acesso negado, voce só pode ver suas proprias consultas");
             }
-            return consulta;
+            return ConsultaResponse.from(consulta);
         }
 
         throw new AccessDeniedException("Acesso negado");
-
     }
 
     @Override

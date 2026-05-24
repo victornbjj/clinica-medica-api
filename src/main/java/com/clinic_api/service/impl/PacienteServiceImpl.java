@@ -2,6 +2,7 @@ package com.clinic_api.service.impl;
 
 import com.clinic_api.domain.Paciente;
 import com.clinic_api.domain.User;
+import com.clinic_api.dto.paciente.PacienteResponse;
 import com.clinic_api.enums.Role;
 import com.clinic_api.exception.AccessDeniedException;
 import com.clinic_api.exception.BusinessException;
@@ -51,42 +52,40 @@ public class PacienteServiceImpl implements PacienteService {
 
 
     @Override
-    public List<Paciente> findAll() {
-        Role role =  getCurrentUserRole();
-        if(role == Role.ADMIN || role == Role.MEDICO){
-            return pacienteRepository.findAll();
-        }
-        else if(role == Role.CLIENTE){
-            Paciente paciente = pacienteRepository.findByIdUserId(getCurrentUser().getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
-
-            return List.of(paciente);
-        }
-        else{
-            throw new AccessDeniedException("Acesso negado");
-        }
-    }
-
-    @Override
-    public Paciente findById(UUID id) {
+    public List<PacienteResponse> findAll() {
         Role role = getCurrentUserRole();
-
-
-        if(role == Role.ADMIN|| role == Role.MEDICO){
-            return pacienteRepository.findById(id)
-                    .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
+        if (role == Role.ADMIN || role == Role.MEDICO) {
+            return pacienteRepository.findAll().stream()
+                    .map(PacienteResponse::from)
+                    .toList();
         }
         if (role == Role.CLIENTE) {
             Paciente paciente = pacienteRepository.findByIdUserId(getCurrentUser().getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
-            if(!paciente.getId().equals(id)){
+            return List.of(PacienteResponse.from(paciente));
+        }
+        throw new AccessDeniedException("Acesso negado");
+    }
+
+    @Override
+    public PacienteResponse findById(UUID id) {
+        Role role = getCurrentUserRole();
+
+        if (role == Role.ADMIN || role == Role.MEDICO) {
+            Paciente paciente = pacienteRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
+            return PacienteResponse.from(paciente);
+        }
+        if (role == Role.CLIENTE) {
+            Paciente paciente = pacienteRepository.findByIdUserId(getCurrentUser().getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
+            if (!paciente.getId().equals(id)) {
                 throw new AccessDeniedException("Acesso negado");
             }
-            return paciente;
+            return PacienteResponse.from(paciente);
         }
 
         throw new AccessDeniedException("Acesso negado");
-
     }
 
     @Override

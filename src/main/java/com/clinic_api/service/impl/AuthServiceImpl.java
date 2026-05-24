@@ -18,7 +18,7 @@ import com.clinic_api.dto.LoginRequest;
 import com.clinic_api.dto.LoginResponse;
 import com.clinic_api.dto.RegisterRequest;
 import com.clinic_api.service.AuthService;
-import com.clinic_api.service.ViaCepService;
+import com.clinic_api.service.CepService;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -44,7 +44,7 @@ public class AuthServiceImpl  implements AuthService {
 
 
     @Autowired
-    private ViaCepService viaCepService;
+    private CepService cepService;
 
 
     @Autowired
@@ -81,10 +81,9 @@ public class AuthServiceImpl  implements AuthService {
         }
 
 
-        Endereco endereco = viaCepService.consultarCep(request.getCep());
+        Endereco endereco = cepService.consultarCep(request.getCep());
         endereco.setNumero(request.getNumero());
         enderecoRepository.save(endereco);
-
 
         User user = new User();
         user.setEmail(request.getEmail());
@@ -121,10 +120,9 @@ public class AuthServiceImpl  implements AuthService {
             throw new BusinessException("Email já cadastrado");
         }
 
-        Endereco endereco = viaCepService.consultarCep(request.getCep());
+        Endereco endereco = cepService.consultarCep(request.getCep());
         endereco.setNumero(request.getNumero());
         enderecoRepository.save(endereco);
-
 
         User user = new User();
         user.setEmail(request.getEmail());

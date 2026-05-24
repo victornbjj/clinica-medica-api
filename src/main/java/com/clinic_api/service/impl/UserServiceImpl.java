@@ -1,7 +1,7 @@
 package com.clinic_api.service.impl;
 
-import com.clinic_api.domain.Paciente;
 import com.clinic_api.domain.User;
+import com.clinic_api.dto.user.UserResponse;
 import com.clinic_api.enums.Role;
 import com.clinic_api.exception.AccessDeniedException;
 import com.clinic_api.exception.BusinessException;
@@ -52,37 +52,40 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public List<User> findAll() {
+    public List<UserResponse> findAll() {
         Role role = getCurrentUserRole();
-        if(role != Role.ADMIN){
+        if (role != Role.ADMIN) {
             throw new AccessDeniedException("Acesso negado");
         }
-        return userRepository.findAll();
+        return userRepository.findAll().stream()
+                .map(UserResponse::from)
+                .toList();
     }
 
     @Override
-    public User findById(UUID id) {
+    public UserResponse findById(UUID id) {
         Role role = getCurrentUserRole();
 
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 
-        if(role == Role.ADMIN ){
-
-            return user;
+        if (role == Role.ADMIN) {
+            return UserResponse.from(user);
         }
 
-        if(role == Role.MEDICO ||role == Role.CLIENTE ){
-            if(!getCurrentUser().getId().equals(id)){
+        if (role == Role.MEDICO || role == Role.CLIENTE) {
+            if (!getCurrentUser().getId().equals(id)) {
                 throw new AccessDeniedException("Acesso negado");
             }
-            return user;
+            return UserResponse.from(user);
         }
 
-
-
         throw new AccessDeniedException("Acesso negado");
+    }
 
+    @Override
+    public UserResponse findMe() {
+        return UserResponse.from(getCurrentUser());
     }
 
     @Override
