@@ -1,15 +1,17 @@
 package com.clinic_api.controller;
 
-import com.clinic_api.domain.User;
 import com.clinic_api.dto.user.UserResponse;
+import com.clinic_api.dto.user.UserUpdateRequest;
 import com.clinic_api.service.UserService;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -22,59 +24,31 @@ public class UserController {
         this.userService = userService;
     }
 
-    /**
-     * GET /users/me
-     * Retorna o usuário autenticado.
-     */
     @GetMapping("/me")
     public ResponseEntity<UserResponse> getCurrentUser() {
         return ResponseEntity.ok(userService.findMe());
     }
 
-    /**
-     * GET /users
-     * Lista todos os usuários.
-     * Segurança: apenas ADMIN (validação também no service).
-     */
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<UserResponse>> getUsers() {
-        return ResponseEntity.ok(userService.findAll());
+    public ResponseEntity<Page<UserResponse>> getUsers(
+            @PageableDefault(size = 20, sort = "email", direction = Sort.Direction.ASC) Pageable pageable) {
+        return ResponseEntity.ok(userService.findAll(pageable));
     }
 
-    /**
-     * GET /users/{id}
-     * Detalhes de um usuário.
-     * Regras aplicadas pelo service:
-     * - ADMIN: qualquer usuário
-     * - MEDICO e CLIENTE: apenas o próprio usuário
-     */
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getUserById(@PathVariable UUID id) {
         return ResponseEntity.ok(userService.findById(id));
     }
 
-    /**
-     * PUT /users/{id}
-     * Atualiza dados de um usuário.
-     * Regras aplicadas pelo service:
-     * - ADMIN: qualquer usuário
-     * - MEDICO e CLIENTE: apenas o próprio usuário
-     */
     @PutMapping("/{id}")
     public ResponseEntity<Void> updateUser(
             @PathVariable UUID id,
-            @RequestBody @Valid User user) {
-        user.setId(id);
-        userService.update(user);
+            @RequestBody @Valid UserUpdateRequest request) {
+        userService.update(id, request);
         return ResponseEntity.ok().build();
     }
 
-    /**
-     * DELETE /users/{id}
-     * Remove um usuário.
-     * Segurança: apenas ADMIN pode deletar.
-     */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {

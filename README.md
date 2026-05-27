@@ -47,8 +47,9 @@ API REST para gerenciamento de consultórios médicos: cadastro de usuários, m�
 | Spring Security | JWT + `@PreAuthorize` |
 | Spring Data JPA | Persistência |
 | Spring Cloud OpenFeign | Cliente ViaCEP |
-| H2 Database | Banco em memória (dev) |
-| Flyway | Migrações SQL |
+| H2 Database | Banco em memória (dev/test) |
+| PostgreSQL | Suporte em produção |
+| Flyway | Migrações SQL (multi-db) |
 | JJWT | Geração/validação de token |
 | Lombok | Redução de boilerplate |
 | SpringDoc OpenAPI | Swagger UI |
@@ -158,14 +159,43 @@ mvn spring-boot:run
 
 A API sobe em **`http://localhost:8080`**.
 
-### 3. Compilar sem rodar
+### 3. Executar com PostgreSQL (produção)
+
+**Variáveis de ambiente adicionais:**
+
+```powershell
+# Windows (PowerShell)
+$env:SPRING_PROFILES_ACTIVE="prod"
+$env:DATABASE_URL="jdbc:postgresql://localhost:5432/clinic_api"
+$env:DATABASE_USERNAME="postgres"
+$env:DATABASE_PASSWORD="sua_senha"
+```
+
+Ou no arquivo `.env` / docker-compose:
+```env
+SPRING_PROFILES_ACTIVE=prod
+DATABASE_URL=jdbc:postgresql://localhost:5432/clinic_api
+DATABASE_USERNAME=postgres
+DATABASE_PASSWORD=sua_senha
+JWT_SECRET=sua-chave-super-secreta-com-32-caracteres
+JWT_EXPIRATION=86400000
+```
+
+Depois execute:
+```bash
+./mvnw.cmd spring-boot:run
+```
+
+A aplicação usará PostgreSQL, sem console H2, sem logs SQL e com validação de schema (DDL-safe).
+
+### 4. Compilar sem rodar
 
 ```bash
 mvn clean package -DskipTests
 java -jar target/clinic-api-0.0.1-SNAPSHOT.jar
 ```
 
-### 4. Usuário administrador inicial (Flyway)
+### 5. Usuário administrador inicial (Flyway)
 
 Após o primeiro start, existe um usuário seed criado em `src/main/resources/db/migration/V1__create_admin.sql`:
 
@@ -444,25 +474,60 @@ clinic-api/
 
 ---
 
+## Melhorias recentes (Roadmap v1 completo — 85,7%)
+
+### ✅ Arquitetura e Segurança
+- **DTOs desacoplados** — Entidades JPA não expostas em POST/PUT. Novos DTOs: `ConsultaRequest`, `MedicoRequest`, `PacienteRequest`, `UserUpdateRequest`
+- **Multi-ambiente seguro** — Perfis `dev` (H2), `test` (H2 em memória), `prod` (PostgreSQL)
+- **Secrets via variáveis de ambiente** — `JWT_SECRET`, `JWT_EXPIRATION`, `DATABASE_*` não hardcoded
+- **Autorização em dois níveis** — `@PreAuthorize` em controllers + regras de negócio em services
+
+### ✅ Dados e Performance
+- **Suporte PostgreSQL** — `application-prod.properties` pronto, H2 apenas em dev/test
+- **Paginação e filtros** — `?page`, `?size`, `?sort`, filtros por status (consultas) e especialidade (médicos)
+- **Migração Flyway** — Compatível com H2 e PostgreSQL
+
+### ✅ Testes
+- **Testes de integração** — `@SpringBootTest` + `MockMvc` cobrindo:
+  - ✅ Login e registro (AuthControllerIT)
+  - ✅ Criação de consultas + conflito de horário + acesso negado (ConsultaControllerIT)
+  - ✅ CRUD de médicos com autorização (MedicoControllerIT)
+  - ✅ Gerenciamento de usuários (UserControllerIT)
+- **Base reutilizável** — `AbstractIntegrationTest` com setup automático de usuários, médicos, pacientes
+- **Mock de ViaCEP** — CepService mockado para testes isolados
+
+### ✅ API Limpa
+- **DTOs públicos unificados** — `MedicoResponse` com `@JsonInclude(NON_NULL)` adapta conteúdo por role (sem expor `crm`/`email` a clientes)
+- **Paginação transparente** — Spring Data JPA integrado, sem boilerplate
+
+---
+
 ## Testes
 
 ```bash
 mvn test
 ```
 
-Teste de contexto padrão em `ClinicApiApplicationTests`.
+Testes de integração em:
+- `src/test/java/com/clinic_api/controller/` — Cobertura de endpoints com roles distintos
+- `src/test/java/com/clinic_api/support/AbstractIntegrationTest.java` — Base compartilhada com setup padrão
+
+**Executar teste específico:**
+```bash
+mvn test -Dtest=AuthControllerIT
+```
 
 ---
 
-## Roadmap sugerido
+## Roadmap implementado
 
-- [ ] DTOs de **request** para POST/PUT (desacoplar totalmente das entidades)
-- [ ] Banco PostgreSQL em produção
-- [ ] Testes de integração com MockMvc / Testcontainers
-- [ ] CI/CD (GitHub Actions)
-- [ ] Perfil `application-prod` e secrets externos
-- [ ] Paginação e filtros nas listagens
-- [ ] Remoção de DTOs legados (`MedicoPublicResponse`, `MedicoAdminResponse`)
+- [x] DTOs de **request** para POST/PUT (desacoplar totalmente das entidades) — `ConsultaRequest`, `MedicoRequest`, `PacienteRequest`, `UserUpdateRequest`
+- [x] Banco PostgreSQL em produção — `application-prod.properties` com datasource PostgreSQL via env vars
+- [x] Testes de integração com MockMvc — `AuthControllerIT`, `ConsultaControllerIT`, `MedicoControllerIT`, `UserControllerIT`
+- [x] Perfil `application-prod` e secrets externos — Configuração segura com variáveis de ambiente (`DATABASE_URL`, `JWT_SECRET`, `JWT_EXPIRATION`)
+- [x] Paginação e filtros nas listagens — `Pageable` com defaults em GET `/medicos` (filtro especialidade), `/consultas` (filtro status), `/pacientes`
+- [x] Remoção de DTOs legados — Consolidação em `MedicoResponse` com `@JsonInclude(NON_NULL)` por role
+- [ ] CI/CD (GitHub Actions) — Pendente (opcional)
 
 ---
 

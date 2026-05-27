@@ -2,41 +2,42 @@ package com.clinic_api.service.impl;
 
 import com.clinic_api.domain.User;
 import com.clinic_api.dto.user.UserResponse;
+import com.clinic_api.dto.user.UserUpdateRequest;
 import com.clinic_api.enums.Role;
 import com.clinic_api.exception.AccessDeniedException;
 import com.clinic_api.exception.BusinessException;
 import com.clinic_api.exception.ResourceNotFoundException;
 import com.clinic_api.repository.UserRepository;
 import com.clinic_api.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
 public class UserServiceImpl implements UserService {
 
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private UserRepository userRepository;
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    private String getCurrentUserEmail(){
+    private String getCurrentUserEmail() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if(auth == null || !auth.isAuthenticated()){
+        if (auth == null || !auth.isAuthenticated()) {
             throw new AccessDeniedException("Usuário não autenticado");
         }
         return (String) auth.getPrincipal();
     }
 
-
-    private Role getCurrentUserRole(){
+    private Role getCurrentUserRole() {
         return SecurityContextHolder.getContext().getAuthentication()
                 .getAuthorities().stream()
                 .map(a -> Role.valueOf(a.getAuthority().replace("ROLE_", "")))
@@ -49,17 +50,13 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
     }
 
-
-
     @Override
-    public List<UserResponse> findAll() {
+    public Page<UserResponse> findAll(Pageable pageable) {
         Role role = getCurrentUserRole();
         if (role != Role.ADMIN) {
             throw new AccessDeniedException("Acesso negado");
         }
-        return userRepository.findAll().stream()
-                .map(UserResponse::from)
-                .toList();
+        return userRepository.findAll(pageable).map(UserResponse::from);
     }
 
     @Override
@@ -89,69 +86,56 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void save(User user) {
+    public void update(UUID id, UserUpdateRequest request) {
+        Role role = getCurrentUserRole();
 
+        User userExiste = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 
-        boolean emailJaExiste =userRepository.findByEmail(user.getEmail()).isPresent();
+        if (role == Role.MEDICO || role == Role.CLIENTE) {
+            if (!getCurrentUser().getId().equals(userExiste.getId())) {
+                throw new AccessDeniedException("Acesso negado");
+            }
+            applyUpdate(userExiste, request, false);
+            userRepository.save(userExiste);
+            return;
+        }
 
-        if(emailJaExiste){
+        if (role == Role.ADMIN) {
+            applyUpdate(userExiste, request, true);
+            userRepository.save(userExiste);
+            return;
+        }
+
+        throw new AccessDeniedException("Acesso negado");
+    }
+
+    private void applyUpdate(User user, UserUpdateRequest request, boolean allowRoleChange) {
+        if (!user.getEmail().equals(request.getEmail())
+                && userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new BusinessException("Email já cadastrado");
         }
 
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setEmail(request.getEmail());
 
-
-        userRepository.save(user);
-
-
-    }
-
-    @Override
-    public void update(User user) {
-        Role role = getCurrentUserRole();
-
-        if(user.getId() == null){
-            throw new BusinessException("ID do usuário é obrigatório para atualização");
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
         }
 
-
-        User userExiste = userRepository.findById(user.getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
-
-        if(role == Role.MEDICO || role == Role.CLIENTE ){
-            User userLogado = getCurrentUser();
-
-            if(!userLogado.getId().equals(userExiste.getId())){
-                throw new AccessDeniedException("Acesso negado");
-            }
-            userRepository.save(user);
-            return;
+        if (allowRoleChange && request.getRole() != null) {
+            user.setRole(request.getRole());
         }
-
-        if(role == Role.ADMIN){
-            userRepository.save(user);
-            return;
-        }
-        throw new AccessDeniedException("Acesso negado");
     }
 
     @Override
     public void delete(UUID id) {
         Role role = getCurrentUserRole();
-
-
-        if(role != Role.ADMIN){
+        if (role != Role.ADMIN) {
             throw new AccessDeniedException("Acesso negado");
         }
 
-        if(id == null){
-            throw new BusinessException("ID do médico é obrigatório para atualização");
-        }
-
         User existe = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Paciente não encontrado"));
-
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
         userRepository.delete(existe);
-
     }
 }
